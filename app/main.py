@@ -8,21 +8,26 @@ from app.research_logger import log_evaluation
 
 app = FastAPI(
     title="Garden Rampage — DDA Engine API",
-    description="Backend inferensi FCM/GMM untuk Dynamic Difficulty Adjustment.",
-    version="1.2.0",
+    description=(
+        "Backend inferensi FCM/GMM untuk Dynamic Difficulty Adjustment.\n\n"
+        "**Sistem DDA dua lapis:**\n"
+        "1. **Probabilistic Blending** — weighted average parameter berdasarkan "
+        "probabilitas arketipe (Struggling/Balanced/Dominant) dari FCM atau GMM.\n"
+        "2. **Behavior Modifier** — penyesuaian tambahan berbasis pola perilaku "
+        "spesifik pemain (pola dash, sumber damage, akurasi, near-death events)."
+    ),
+    version="2.0.0",
 )
-
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   
+    allow_origins=["*"],
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
 
 
 def get_static_dummy_request(mode: str = "FCM") -> EvaluateRequest:
-
     return EvaluateRequest(
         session_id="postman-dummy-session",
         algorithm_mode=mode,
@@ -47,7 +52,15 @@ def get_static_dummy_request(mode: str = "FCM") -> EvaluateRequest:
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "service": "Garden Rampage DDA Engine", "version": "1.2.0"}
+    return {
+        "status": "ok",
+        "service": "Garden Rampage DDA Engine",
+        "version": "2.0.0",
+        "dda_stages": [
+            "Stage 1: Probabilistic Blending (FCM/GMM archetype probabilities)",
+            "Stage 2: Behavior-Specific Modifier (play pattern adjustments)",
+        ],
+    }
 
 
 @app.post("/dda/evaluate", response_model=EvaluateResponse)
@@ -56,7 +69,7 @@ async def evaluate_player(request: Optional[EvaluateRequest] = None):
         if request is None:
             request = get_static_dummy_request()
 
-        archetype, prob_dict, next_params, proc_time = engine.evaluate(
+        archetype, prob_dict, next_params, proc_time, behavior_notes = engine.evaluate(
             request.algorithm_mode,
             request.telemetry,
         )
@@ -69,15 +82,23 @@ async def evaluate_player(request: Optional[EvaluateRequest] = None):
             dominant_archetype=archetype,
             prob_dict=prob_dict,
             next_params=next_params,
+            behavior_notes=behavior_notes,
             processing_time_ms=proc_time,
         )
 
         print("\n[ DDA EVALUATION LOG ]")
         print(f"  Session      : {request.session_id}")
         print(f"  Algorithm    : {request.algorithm_mode}  |  Wave: {request.current_wave}")
-        print(f"  HP Remaining : {request.telemetry.avg_hp_remaining_pct * 100:.1f}%  |  Kills: {request.telemetry.total_kills}")
-        print(f"  Archetype    : {archetype}")
-        print(f"  Probabilities: {prob_dict}")
+        print(f"  HP Remaining : {request.telemetry.avg_hp_remaining_pct * 100:.1f}%"
+              f"  |  Kills: {request.telemetry.total_kills}"
+              f"  |  Accuracy: {request.telemetry.accuracy_pct * 100:.1f}%")
+        print(f"  Dash Freq    : {request.telemetry.dash_frequency:.1f}"
+              f"  |  Near-Death: {request.telemetry.near_death_events}x")
+        print(f"  Archetype    : {archetype}  |  Probs: {prob_dict}")
+        print(f"  Behavior     : {behavior_notes if behavior_notes else ['(none)']}")
+        print(f"  Energy Cost  : ×{next_params['energy_cost_mult']}"
+              f"  |  HP Bonus: +{next_params['player_hp_bonus']}"
+              f"  |  Heal Rate: ×{next_params['heal_drop_rate_mult']}")
         print(f"  Proc Time    : {proc_time:.2f} ms")
         print(f"  Next Params  : {next_params}")
 
@@ -87,19 +108,20 @@ async def evaluate_player(request: Optional[EvaluateRequest] = None):
             difficulty_label=archetype,
             cluster_probabilities=prob_dict,
             next_enemy_params=next_params,
+            behavior_notes=behavior_notes,
             meta={
                 "processing_time_ms": round(proc_time, 2),
-                "model_version": "1.2.scaler_fix",
+                "model_version": "2.0.behavior_modifier",
                 "evaluated_at_wave": request.current_wave,
                 "cycle_range": {
                     "from_wave": request.cycle_range.from_wave,
                     "to_wave": request.cycle_range.to_wave,
                 },
+                "dda_stages_applied": 2,
             },
         )
 
     except ValueError as ve:
-        # Tangani error validasi ilmiah (mis. sum(u) ≠ 1.0)
         print(f"[VALIDATION ERROR] {ve}")
         raise HTTPException(status_code=422, detail=str(ve))
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Dict
+from typing import Dict, List
 
 class CycleRange(BaseModel):
     from_wave: int
@@ -24,7 +24,7 @@ class EvaluateRequest(BaseModel):
     current_wave: int
     cycle_range: CycleRange
     telemetry: TelemetryData
-    current_enemy_params: Dict[str, float | dict]
+    current_enemy_params: Dict[str, float | dict] = {}
 
 class SpawnComposition(BaseModel):
     strawberry: float
@@ -32,15 +32,21 @@ class SpawnComposition(BaseModel):
     pisang: float
 
 class NextEnemyParams(BaseModel):
+    # ── Musuh ──────────────────────────────────────────────────────────────
     strawberry_projectile_speed_mult: float
     strawberry_fire_rate_mult: float
     jambu_windup_time_mult: float
     jambu_aoe_radius_mult: float
     pisang_spin_speed_mult: float
     pisang_wander_deviation_mult: float
+    # ── Spawn ──────────────────────────────────────────────────────────────
     spawn_interval_mult: float
-    spawn_composition: SpawnComposition
     enemy_hp_mult: float
+    spawn_composition: SpawnComposition
+    # ── Player ─────────────────────────────────────────────────────────────
+    energy_cost_mult: float        # multiplier biaya energi dash
+    player_hp_bonus: float         # bonus HP yang ditambahkan ke player di awal wave berikutnya
+    heal_drop_rate_mult: float     # multiplier frekuensi drop item heal
 
 class EvaluateResponse(BaseModel):
     session_id: str
@@ -48,4 +54,5 @@ class EvaluateResponse(BaseModel):
     difficulty_label: str
     cluster_probabilities: Dict[str, float]
     next_enemy_params: NextEnemyParams
+    behavior_notes: List[str]      # catatan modifier perilaku yang aktif (untuk debugging & riset)
     meta: dict

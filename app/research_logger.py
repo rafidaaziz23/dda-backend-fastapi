@@ -8,10 +8,12 @@ LOG_DIR = Path(__file__).parent.parent / "research_logs"
 LOG_FILE = LOG_DIR / "dda_session_log.csv"
 
 CSV_HEADER = [
+    # ── Identifikasi ──────────────────────────────────────────────────────
     "timestamp_utc",
     "session_id",
     "current_wave",
     "algorithm_used",
+    # ── Input Telemetri (11 fitur raw) ────────────────────────────────────
     "raw_avg_hp_remaining_pct",
     "raw_total_kills",
     "raw_accuracy_pct",
@@ -23,10 +25,14 @@ CSV_HEADER = [
     "raw_hits_taken_from_jambu",
     "raw_hits_taken_from_pisang",
     "raw_avg_enemies_alive_simultaneously",
+    # ── Output Stage 1: Arketipe & Probabilitas ───────────────────────────
     "dominant_archetype",
     "prob_struggling",
     "prob_balanced",
     "prob_dominant",
+    # ── Output Stage 2: Behavior Modifiers yang Aktif ─────────────────────
+    "behavior_notes",
+    # ── Output Final: Parameter Enemy ─────────────────────────────────────
     "out_strawberry_projectile_speed_mult",
     "out_strawberry_fire_rate_mult",
     "out_jambu_windup_time_mult",
@@ -38,12 +44,17 @@ CSV_HEADER = [
     "out_spawn_comp_strawberry",
     "out_spawn_comp_jambu",
     "out_spawn_comp_pisang",
+    # ── Output Final: Parameter Player (BARU) ─────────────────────────────
+    "out_energy_cost_mult",
+    "out_player_hp_bonus",
+    "out_heal_drop_rate_mult",
+    # ── Meta ──────────────────────────────────────────────────────────────
     "processing_time_ms",
     "random_seed",
     "model_version",
 ]
 
-MODEL_VERSION = "1.2.scaler_fix"
+MODEL_VERSION = "2.0.behavior_modifier"
 RANDOM_SEED_LOGGED = 42
 
 
@@ -63,19 +74,20 @@ def log_evaluation(
     dominant_archetype: str,
     prob_dict: dict,
     next_params: dict,
+    behavior_notes: list,
     processing_time_ms: float,
 ) -> None:
-
     try:
         _ensure_log_file()
 
         spawn_comp = next_params.get("spawn_composition", {})
         row = [
+            # Identifikasi
             datetime.now(timezone.utc).isoformat(),
             session_id,
             current_wave,
             algorithm_used,
-
+            # Input telemetri
             telemetry.avg_hp_remaining_pct,
             telemetry.total_kills,
             telemetry.accuracy_pct,
@@ -87,12 +99,14 @@ def log_evaluation(
             telemetry.hits_taken_from_jambu,
             telemetry.hits_taken_from_pisang,
             telemetry.avg_enemies_alive_simultaneously,
-
+            # Stage 1 output
             dominant_archetype,
             prob_dict.get("Struggling", 0.0),
-            prob_dict.get("Balanced", 0.0),
-            prob_dict.get("Dominant", 0.0),
-
+            prob_dict.get("Balanced",   0.0),
+            prob_dict.get("Dominant",   0.0),
+            # Stage 2 output — behavior notes sebagai JSON string
+            json.dumps(behavior_notes),
+            # Parameter enemy
             next_params.get("strawberry_projectile_speed_mult"),
             next_params.get("strawberry_fire_rate_mult"),
             next_params.get("jambu_windup_time_mult"),
@@ -104,7 +118,11 @@ def log_evaluation(
             spawn_comp.get("strawberry"),
             spawn_comp.get("jambu"),
             spawn_comp.get("pisang"),
-
+            # Parameter player (baru)
+            next_params.get("energy_cost_mult"),
+            next_params.get("player_hp_bonus"),
+            next_params.get("heal_drop_rate_mult"),
+            # Meta
             round(processing_time_ms, 3),
             RANDOM_SEED_LOGGED,
             MODEL_VERSION,
@@ -115,5 +133,4 @@ def log_evaluation(
             writer.writerow(row)
 
     except Exception as exc:
-
         print(f"[ResearchLogger][ERROR] Gagal menulis log: {exc}")
