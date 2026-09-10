@@ -15,7 +15,6 @@ class TelemetryData(BaseModel):
     near_death_events: int
     hits_taken_from_strawberry: int
     hits_taken_from_jambu: int
-    hits_taken_from_pisang: int
     avg_enemies_alive_simultaneously: float
 
 class EvaluateRequest(BaseModel):
@@ -29,7 +28,6 @@ class EvaluateRequest(BaseModel):
 class SpawnComposition(BaseModel):
     strawberry: float
     jambu: float
-    pisang: float
 
 class NextEnemyParams(BaseModel):
     # ── Musuh ──────────────────────────────────────────────────────────────
@@ -37,16 +35,14 @@ class NextEnemyParams(BaseModel):
     strawberry_fire_rate_mult: float
     jambu_windup_time_mult: float
     jambu_aoe_radius_mult: float
-    pisang_spin_speed_mult: float
-    pisang_wander_deviation_mult: float
     # ── Spawn ──────────────────────────────────────────────────────────────
     spawn_interval_mult: float
     enemy_hp_mult: float
     spawn_composition: SpawnComposition
     # ── Player ─────────────────────────────────────────────────────────────
-    energy_cost_mult: float        # multiplier biaya energi dash
-    player_hp_bonus: float         # bonus HP yang ditambahkan ke player di awal wave berikutnya
-    heal_drop_rate_mult: float     # multiplier frekuensi drop item heal
+    energy_cost_mult: float
+    player_hp_bonus: float
+    heal_drop_rate_mult: float
 
 class EvaluateResponse(BaseModel):
     session_id: str
@@ -54,5 +50,5 @@ class EvaluateResponse(BaseModel):
     difficulty_label: str
     cluster_probabilities: Dict[str, float]
     next_enemy_params: NextEnemyParams
-    behavior_notes: List[str]      # catatan modifier perilaku yang aktif (untuk debugging & riset)
+    behavior_notes: List[str]
     meta: dict

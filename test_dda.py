@@ -13,7 +13,6 @@ t = type('T', (), {
     'near_death_events': 4,
     'hits_taken_from_strawberry': 9,
     'hits_taken_from_jambu': 1,
-    'hits_taken_from_pisang': 0,
     'avg_enemies_alive_simultaneously': 7
 })()
 

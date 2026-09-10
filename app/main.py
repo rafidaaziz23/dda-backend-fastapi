@@ -43,7 +43,6 @@ def get_static_dummy_request(mode: str = "FCM") -> EvaluateRequest:
             near_death_events=1,
             hits_taken_from_strawberry=2,
             hits_taken_from_jambu=1,
-            hits_taken_from_pisang=1,
             avg_enemies_alive_simultaneously=3.0,
         ),
         current_enemy_params={},

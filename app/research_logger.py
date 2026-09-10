@@ -23,7 +23,6 @@ CSV_HEADER = [
     "raw_near_death_events",
     "raw_hits_taken_from_strawberry",
     "raw_hits_taken_from_jambu",
-    "raw_hits_taken_from_pisang",
     "raw_avg_enemies_alive_simultaneously",
     # ── Output Stage 1: Arketipe & Probabilitas ───────────────────────────
     "dominant_archetype",
@@ -37,13 +36,10 @@ CSV_HEADER = [
     "out_strawberry_fire_rate_mult",
     "out_jambu_windup_time_mult",
     "out_jambu_aoe_radius_mult",
-    "out_pisang_spin_speed_mult",
-    "out_pisang_wander_deviation_mult",
     "out_spawn_interval_mult",
     "out_enemy_hp_mult",
     "out_spawn_comp_strawberry",
     "out_spawn_comp_jambu",
-    "out_spawn_comp_pisang",
     # ── Output Final: Parameter Player (BARU) ─────────────────────────────
     "out_energy_cost_mult",
     "out_player_hp_bonus",
@@ -97,7 +93,6 @@ def log_evaluation(
             telemetry.near_death_events,
             telemetry.hits_taken_from_strawberry,
             telemetry.hits_taken_from_jambu,
-            telemetry.hits_taken_from_pisang,
             telemetry.avg_enemies_alive_simultaneously,
             # Stage 1 output
             dominant_archetype,
@@ -111,13 +106,10 @@ def log_evaluation(
             next_params.get("strawberry_fire_rate_mult"),
             next_params.get("jambu_windup_time_mult"),
             next_params.get("jambu_aoe_radius_mult"),
-            next_params.get("pisang_spin_speed_mult"),
-            next_params.get("pisang_wander_deviation_mult"),
             next_params.get("spawn_interval_mult"),
             next_params.get("enemy_hp_mult"),
             spawn_comp.get("strawberry"),
             spawn_comp.get("jambu"),
-            spawn_comp.get("pisang"),
             # Parameter player (baru)
             next_params.get("energy_cost_mult"),
             next_params.get("player_hp_bonus"),
