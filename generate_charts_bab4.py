@@ -36,11 +36,11 @@ OUTPUT_DIRS = [
 for d in OUTPUT_DIRS:
     os.makedirs(d, exist_ok=True)
 
-# Datasets
+# Datasets terbaru (11 September 2026)
 DATASET_DIR = os.path.join(BACKEND_DIR, "..", "garden-rampage", "dataset")
-FILE_DDA_OFF = os.path.join(DATASET_DIR, "telemetry_session_2026-08-30_16-27-49.json")
-FILE_FCM     = os.path.join(DATASET_DIR, "telemetry_session_2026-08-30_16-36-48.json")
-FILE_GMM     = os.path.join(DATASET_DIR, "telemetry_session_2026-08-30_16-43-00.json")
+FILE_DDA_OFF = os.path.join(DATASET_DIR, "telemetry_session_2026-09-11_00-00-48.json")
+FILE_FCM     = os.path.join(DATASET_DIR, "telemetry_session_2026-09-11_00-10-46.json")
+FILE_GMM     = os.path.join(DATASET_DIR, "telemetry_session_2026-09-11_00-21-28.json")
 
 with open(FILE_DDA_OFF, "r") as f:
     data_off = json.load(f)
@@ -59,34 +59,36 @@ def save_chart(fig, filename):
 
 
 # ==============================================================================
-# 1. GAMBAR 9: TREN SISA KESEHATAN (HP) PEMAIN WAVE 1–9 (DDA OFF vs FCM vs GMM)
+# 1. GAMBAR 9: TREN SISA KESEHATAN (HP) PEMAIN WAVE 1–18 (DDA OFF vs FCM vs GMM)
 # ==============================================================================
 def generate_gambar_9():
-    waves = list(range(1, 10))
+    waves = list(range(1, 19))
     hp_off = [data_off[w - 1]["avg_hp_remaining_pct"] * 100 for w in waves]
     hp_fcm = [data_fcm[w - 1]["avg_hp_remaining_pct"] * 100 for w in waves]
     hp_gmm = [data_gmm[w - 1]["avg_hp_remaining_pct"] * 100 for w in waves]
 
-    fig, ax = plt.subplots(figsize=(8.5, 4.8))
+    fig, ax = plt.subplots(figsize=(10.0, 5.0))
 
-    # Shaded zones: Zone Flow State (50% - 90%) and Critical Zone (<25%)
-    ax.axhspan(50, 90, color="#E8F5E9", alpha=0.7, label="Zona Flow / Keseimbangan (50% – 90%)")
+    # Shaded zones: Zone Flow State (40% - 80%) and Critical Zone (<25%)
+    ax.axhspan(40, 80, color="#E8F5E9", alpha=0.7, label="Zona Flow / Keseimbangan (40% – 80%)")
     ax.axhspan(0, 25, color="#FFEBEE", alpha=0.7, label="Zona Kritis (< 25%)")
 
     # Lines
-    ax.plot(waves, hp_off, marker="s", color="#D32F2F", linewidth=2.0, markersize=6, label="DDA OFF (Kontrol)")
-    ax.plot(waves, hp_fcm, marker="o", color="#1976D2", linewidth=2.4, markersize=7, label="FCM (Soft-Adaptive)")
-    ax.plot(waves, hp_gmm, marker="^", color="#E65100", linewidth=2.0, markersize=6, linestyle="--", label="GMM (Gaussian)")
+    ax.plot(waves, hp_off, marker="s", color="#D32F2F", linewidth=1.8, markersize=5, label="DDA OFF (Kontrol)")
+    ax.plot(waves, hp_fcm, marker="o", color="#1976D2", linewidth=2.2, markersize=6, label="FCM (Soft-Adaptive)")
+    ax.plot(waves, hp_gmm, marker="^", color="#E65100", linewidth=1.8, markersize=5, linestyle="--", label="GMM (Gaussian)")
 
-    # Data value annotations for FCM at Wave 4 and 5
-    ax.annotate(f"{hp_fcm[3]:.1f}%", (4, hp_fcm[3]), textcoords="offset points", xytext=(0, 10), ha="center", fontsize=8.5, color="#1976D2", fontweight="bold")
-    ax.annotate(f"{hp_fcm[4]:.1f}%", (5, hp_fcm[4]), textcoords="offset points", xytext=(0, 10), ha="center", fontsize=8.5, color="#1976D2", fontweight="bold")
+    # Danger Spike annotation at Wave 9 & 18
+    ax.axvline(9, color="#757575", linestyle=":", alpha=0.8)
+    ax.text(9, 102, "Spike 1\n(Wave 9)", ha="center", va="bottom", fontsize=8.5, color="#424242", fontweight="bold")
+    ax.axvline(18, color="#B71C1C", linestyle=":", alpha=0.8)
+    ax.text(18, 102, "Spike 2\n(Wave 18)", ha="center", va="bottom", fontsize=8.5, color="#B71C1C", fontweight="bold")
 
-    ax.set_title("Perbandingan Tren Sisa Kesehatan (HP) Pemain per Gelombang (Wave 1–9)", pad=12, fontweight="bold")
+    ax.set_title("Perbandingan Tren Sisa Kesehatan (HP) Pemain per Gelombang (Wave 1–18)", pad=14, fontweight="bold")
     ax.set_xlabel("Nomor Gelombang Pertempuran (Wave)")
     ax.set_ylabel("Rata-rata Sisa Kesehatan Pemain (%)")
     ax.set_xticks(waves)
-    ax.set_ylim(0, 105)
+    ax.set_ylim(0, 115)
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="lower left", framealpha=0.9, facecolor="white", edgecolor="#BDBDBD")
 
@@ -97,7 +99,7 @@ def generate_gambar_9():
 # 2. GAMBAR 10: DINAMIKA PROBABILITAS KEANGGOTAAN FCM (SOFT MEMBERSHIP)
 # ==============================================================================
 def generate_gambar_10():
-    eval_waves = list(range(3, 11))
+    eval_waves = list(range(3, 19))
     p_struggling = []
     p_balanced   = []
     p_dominant   = []
@@ -110,34 +112,20 @@ def generate_gambar_10():
         p_balanced.append(probs.get("Balanced", 0.0) * 100)
         p_dominant.append(probs.get("Dominant", 0.0) * 100)
 
-    fig, ax = plt.subplots(figsize=(8.5, 4.8))
+    fig, ax = plt.subplots(figsize=(10.5, 5.0))
     x = np.arange(len(eval_waves))
-    width = 0.55
+    width = 0.60
 
     b1 = ax.bar(x, p_dominant, width, label="Dominant (Mahir)", color="#1976D2", edgecolor="black", linewidth=0.5)
     b2 = ax.bar(x, p_balanced, width, bottom=p_dominant, label="Balanced (Seimbang)", color="#43A047", edgecolor="black", linewidth=0.5)
     bottoms = np.array(p_dominant) + np.array(p_balanced)
     b3 = ax.bar(x, p_struggling, width, bottom=bottoms, label="Struggling (Kesulitan)", color="#E53935", edgecolor="black", linewidth=0.5)
 
-    # Highlight Soft Membership at Wave 7
-    idx_w7 = eval_waves.index(7)
-    val_struggling_w7 = p_struggling[idx_w7]
-    ax.annotate(
-        f"Struggling: {val_struggling_w7:.1f}%\n(Soft Transition)",
-        xy=(idx_w7, 100 - val_struggling_w7 / 2),
-        xytext=(idx_w7 + 0.35, 82),
-        arrowprops=dict(arrowstyle="->", color="#B71C1C", lw=1.5),
-        fontsize=8.5,
-        fontweight="bold",
-        color="#B71C1C",
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="#FFEBEE", edgecolor="#B71C1C", lw=1)
-    )
-
-    ax.set_title("Dinamika Distribusi Probabilitas Keanggotaan FCM (Wave 3–10)", pad=12, fontweight="bold")
+    ax.set_title("Dinamika Distribusi Probabilitas Keanggotaan FCM (Wave 3–18)", pad=12, fontweight="bold")
     ax.set_xlabel("Nomor Gelombang Pertempuran (Wave)")
     ax.set_ylabel("Derajat Keanggotaan / Probabilitas (%)")
     ax.set_xticks(x)
-    ax.set_xticklabels([f"Wave {w}" for w in eval_waves])
+    ax.set_xticklabels([f"W{w}" for w in eval_waves], fontsize=9)
     ax.set_ylim(0, 105)
     ax.grid(axis="y", linestyle=":", alpha=0.6)
     ax.legend(loc="lower left", framealpha=0.9, facecolor="white", edgecolor="#BDBDBD")
@@ -149,7 +137,7 @@ def generate_gambar_10():
 # 3. GAMBAR 11: DISTRIBUSI PROBABILITAS KLASIFIKASI GMM (HARD CLASSIFICATION)
 # ==============================================================================
 def generate_gambar_11():
-    eval_waves = list(range(3, 10))
+    eval_waves = list(range(3, 19))
     p_struggling = []
     p_balanced   = []
     p_dominant   = []
@@ -162,32 +150,22 @@ def generate_gambar_11():
         p_balanced.append(probs.get("Balanced", 0.0) * 100)
         p_dominant.append(probs.get("Dominant", 0.0) * 100)
 
-    fig, ax = plt.subplots(figsize=(8.5, 4.8))
+    fig, ax = plt.subplots(figsize=(10.5, 5.0))
     x = np.arange(len(eval_waves))
-    width = 0.25
+    width = 0.26
 
     ax.bar(x - width, p_dominant, width, label="Dominant (Mahir)", color="#1976D2", edgecolor="black", linewidth=0.5)
     ax.bar(x, p_balanced, width, label="Balanced (Seimbang)", color="#43A047", edgecolor="black", linewidth=0.5)
     ax.bar(x + width, p_struggling, width, label="Struggling (Kesulitan)", color="#E53935", edgecolor="black", linewidth=0.5)
 
-    ax.set_title("Distribusi Probabilitas Klasifikasi Model GMM (Wave 3–9)", pad=12, fontweight="bold")
+    ax.set_title("Distribusi Probabilitas Klasifikasi Model GMM (Wave 3–18)", pad=12, fontweight="bold")
     ax.set_xlabel("Nomor Gelombang Pertempuran (Wave)")
     ax.set_ylabel("Nilai Probabilitas Posterior (%)")
     ax.set_xticks(x)
-    ax.set_xticklabels([f"Wave {w}" for w in eval_waves])
-    ax.set_ylim(0, 110)
+    ax.set_xticklabels([f"W{w}" for w in eval_waves], fontsize=9)
+    ax.set_ylim(0, 115)
     ax.grid(axis="y", linestyle=":", alpha=0.6)
     ax.legend(loc="upper right", framealpha=0.9, facecolor="white", edgecolor="#BDBDBD")
-
-    # Text note inside chart
-    ax.text(
-        0.03, 0.85,
-        "Karakteristik GMM: Biner / Mutlak (100% atau 0%)\nTanpa Transisi Gradual Antar-Arketipe",
-        transform=ax.transAxes,
-        fontsize=9,
-        fontstyle="italic",
-        bbox=dict(boxstyle="round,pad=0.4", facecolor="#FFF3E0", edgecolor="#E65100", lw=1)
-    )
 
     save_chart(fig, "Gambar_11_Probabilitas_GMM.png")
 
@@ -301,15 +279,15 @@ def generate_gambar_13():
 
 
 # ==============================================================================
-# 6. GAMBAR 14: AKUMULASI KERUSAKAN DITERIMA PEMAIN (DAMAGE TAKEN) WAVE 1–9
+# 6. GAMBAR 14: AKUMULASI KERUSAKAN DITERIMA PEMAIN (DAMAGE TAKEN) WAVE 1–18
 # ==============================================================================
 def generate_gambar_14():
-    waves = list(range(1, 10))
+    waves = list(range(1, 19))
     dmg_off = [data_off[w - 1]["damage_taken_total"] for w in waves]
     dmg_fcm = [data_fcm[w - 1]["damage_taken_total"] for w in waves]
     dmg_gmm = [data_gmm[w - 1]["damage_taken_total"] for w in waves]
 
-    fig, ax = plt.subplots(figsize=(8.5, 4.8))
+    fig, ax = plt.subplots(figsize=(10.5, 5.0))
     x = np.arange(len(waves))
     width = 0.26
 
@@ -317,11 +295,11 @@ def generate_gambar_14():
     ax.bar(x, dmg_fcm, width, label="FCM (Soft-Adaptive)", color="#1976D2", edgecolor="black", linewidth=0.5)
     ax.bar(x + width, dmg_gmm, width, label="GMM (Gaussian)", color="#E65100", edgecolor="black", linewidth=0.5)
 
-    ax.set_title("Perbandingan Akumulasi Kerusakan Diterima Pemain per Gelombang (Wave 1–9)", pad=12, fontweight="bold")
+    ax.set_title("Perbandingan Akumulasi Kerusakan Diterima Pemain per Gelombang (Wave 1–18)", pad=12, fontweight="bold")
     ax.set_xlabel("Nomor Gelombang Pertempuran (Wave)")
     ax.set_ylabel("Total Kerusakan Diterima (Damage Points)")
     ax.set_xticks(x)
-    ax.set_xticklabels([f"Wave {w}" for w in waves])
+    ax.set_xticklabels([f"W{w}" for w in waves], fontsize=9)
     ax.set_ylim(0, max(max(dmg_off), max(dmg_fcm), max(dmg_gmm)) + 12)
     ax.grid(axis="y", linestyle=":", alpha=0.6)
     ax.legend(loc="upper left", framealpha=0.9, facecolor="white", edgecolor="#BDBDBD")
